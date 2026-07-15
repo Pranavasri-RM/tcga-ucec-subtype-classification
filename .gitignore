@@ -1,0 +1,35 @@
+# ── Raw data (large, regenerable via data/data_download.R) ─────
+# Includes TCGA_UCEC_data/ (final CSVs) and GDCdata/ (TCGAbiolinks'
+# own download cache, nested here so there's one raw-data location)
+data/raw/
+
+# ── Processed data ────────────────────────────────────────────
+# Only the full filtered matrix is too large for GitHub (>100MB).
+# Everything else in data/processed/TCGA_UCEC_processed/ (hvg3000
+# matrix, clinical, pca coords, subtype labels) is small and tracked.
+data/processed/TCGA_UCEC_processed/X_log2tpm_filtered.csv
+
+# ── Project root cruft ────────────────────────────────────────
+# MANIFEST.txt: TCGAbiolinks writes this to the cwd on every GDCquery()
+# call and doesn't take a directory argument to redirect it — can't be
+# relocated, so it's ignored where it lands instead.
+MANIFEST.txt
+# Old/superseded files kept around locally but not part of the repo
+old/
+# Stray debug .rds files from interactive testing (not pipeline outputs)
+*.rds
+
+# ── OS / editor junk ─────────────────────────────────────────────
+.DS_Store
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# ── R artifacts ──────────────────────────────────────────────────
+.Rhistory
+.RData
+.Rproj.user/
+
+# ── Environment / secrets ────────────────────────────────────────
+.env
+*.Renviron
