@@ -1,0 +1,106 @@
+# TCGA-UCEC Molecular Subtype Classification – Interpretable ML Pipeline
+
+An interpretable machine learning pipeline for classifying molecular subtypes
+of endometrial cancer using TCGA-UCEC RNA-seq and clinical data. Built for
+the Advanced Integrative Omics course.
+
+Combines XGBoost classification, SHAP-based interpretability, and Cox
+proportional hazards survival modeling to both predict molecular subtype
+(POLE / MSI / CNV-High / NSMP) and identify the genes and clinical factors
+driving those predictions and patient outcomes.
+
+## Repository structure
+
+```
+.
+├── data/
+│   ├── data_download.R              # Pulls raw TCGA-UCEC data via TCGAbiolinks/GDC
+│   ├── raw/                         # NOT tracked – regenerate via data_download.R
+│   │   ├── TCGA_UCEC_data/          # Final CSVs (RNA-seq, clinical, CNV, mutations)
+│   │   └── GDCdata/                 # TCGAbiolinks' own raw download cache
+│   └── processed/
+│       └── TCGA_UCEC_processed/     # Derived matrices — see "Data" below
+├── notebooks/
+│   └── main_analysis.ipynb          # Main analysis: EDA, PCA/UMAP, XGBoost, SHAP, Cox, KM
+├── src/
+│   └── main.R                       # Standalone MAF sanity-check script (optional)
+├── results/
+│   ├── figures/                     # All exported plots (QC, PCA, survival, SHAP, etc.)
+│   └── shap_results/                # SHAP top-50 gene tables + raw SHAP value array
+├── requirements.txt                 # Python dependencies
+└── README.md
+```
+
+## Setup
+
+```bash
+# R packages (for data_download.R and src/main.R)
+R -e 'install.packages("data.table"); BiocManager::install(c("TCGAbiolinks","SummarizedExperiment"))'
+
+# Python packages (for the notebook)
+pip install -r requirements.txt
+```
+
+## Running the pipeline
+
+Run all commands from the project root.
+
+**1. Download the raw data** (pulls RNA-seq, clinical, CNV, and mutation data
+for TCGA-UCEC from GDC, can take a while and use several GB of disk):
+
+```bash
+Rscript data/data_download.R
+```
+
+Populates `data/raw/TCGA_UCEC_data/` (18 CSVs + session info) and
+`data/raw/GDCdata/` (TCGAbiolinks' intermediate download cache).
+
+**2. (Optional) Sanity-check the mutation data:**
+
+```bash
+Rscript src/main.R
+```
+
+Loads and filters the MAF file and prints it to console, a standalone
+check, not required before the notebook.
+
+**3. Run the main analysis notebook:**
+
+```bash
+jupyter notebook notebooks/main_analysis.ipynb
+```
+
+Run all cells top to bottom (later cells depend on variables from earlier
+ones). Populates `data/processed/TCGA_UCEC_processed/`, `results/figures/`,
+and `results/shap_results/`.
+
+Or non-interactively:
+```bash
+jupyter nbconvert --to notebook --execute notebooks/main_analysis.ipynb --output main_analysis.ipynb
+```
+
+## Data
+
+**Raw data** (`data/raw/`) is not stored in the repo, regenerate it with
+`data_download.R` above. TCGA data is public, so this keeps the repo
+lightweight without losing reproducibility.
+
+**Processed data** (`data/processed/TCGA_UCEC_processed/`): `clinical_aligned.csv`,
+`pca_coords.csv`, `X_log2tpm_hvg3000.csv`, and `y_subtypes.csv` are tracked
+directly in the repo. `X_log2tpm_filtered.csv` (the full filtered log2-TPM
+matrix, ~129MB) exceeds GitHub's 100MB file limit and is excluded — it
+regenerates from the raw counts via the notebook.
+
+## Methods
+
+- Exploratory data analysis and QC (library size, missingness, gene filtering)
+- Dimensionality reduction: PCA, UMAP
+- Molecular subtype classification: XGBoost
+- Model interpretability: SHAP (per-class top-50 genes, mean |SHAP| scores)
+- Survival analysis: Kaplan-Meier, multivariate Cox proportional hazards
+
+## Notes
+
+- `MANIFEST.txt` at the project root is written automatically by
+  TCGAbiolinks on every `GDCquery()` call and can't be redirected, it's
+  gitignored in place rather than relocated.
