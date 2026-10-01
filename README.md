@@ -1,13 +1,21 @@
 # TCGA-UCEC Molecular Subtype Classification – Interpretable ML Pipeline
 
-An interpretable machine learning pipeline for classifying molecular subtypes
-of endometrial cancer using TCGA-UCEC RNA-seq and clinical data. Built for
-the Advanced Integrative Omics course.
+An interpretable machine learning pipeline for classifying molecular subtypes of endometrial cancer using TCGA-UCEC RNA-seq and clinical data. Built for the Advanced Integrative Omics course.
 
 Combines XGBoost classification, SHAP-based interpretability, and Cox
 proportional hazards survival modeling to both predict molecular subtype
-(POLE / MSI / CNV-High / NSMP) and identify the genes and clinical factors
+(POLE / MSI / CN-High / NSMP) and identify the genes and clinical factors
 driving those predictions and patient outcomes.
+
+## Key results
+- **Cohort**: 233 TCGA-UCEC patients with molecular subtype labels (NSMP 88, MSI 67, CN-High 61, POLE 17), using the top 3,000 highly variable genes (log2-TPM).
+- **Classification**: class-weighted XGBoost with stratified 5-fold cross-validation reached 0.87 accuracy and a macro ROC-AUC of 0.95. F1 was 0.91 for CN-High, 0.90 for NSMP and 0.88 for MSI. POLE was the hardest class (F1 0.32): it has only 17 samples and is defined by mutations rather than expression, so expression alone captures it less well.
+- **Interpretability**: SHAP recovered known subtype biology without being told about it. MLH1 was the top gene for MSI (consistent with MLH1 silencing in mismatch-repair-deficient tumors), CDKN1A, a p53 target, ranked highly for CN-High, and the interferon-response gene GBP5 ranked highly for POLE. Pathway enrichment of the CN-High SHAP genes was significant for the p53 transcriptional network and DNA damage response (adjusted p < 0.05).
+- **Survival**: patients split by a SHAP-derived expression score had different overall survival (log-rank p = 0.037). In a multivariate Cox model adjusted for grade, stage and subtype, the score was not independently significant (HR 1.15, p = 0.38), and the analysis is limited by the small number of death events (20).
+
+![Confusion matrix](results/figures/confusion_matrix.png)
+
+![Top SHAP genes per subtype](results/figures/shap_bar_symbols.png)
 
 ## Repository structure
 
@@ -86,10 +94,7 @@ jupyter nbconvert --to notebook --execute notebooks/main_analysis.ipynb --output
 lightweight without losing reproducibility.
 
 **Processed data** (`data/processed/TCGA_UCEC_processed/`): `clinical_aligned.csv`,
-`pca_coords.csv`, `X_log2tpm_hvg3000.csv`, and `y_subtypes.csv` are tracked
-directly in the repo. `X_log2tpm_filtered.csv` (the full filtered log2-TPM
-matrix, ~129MB) exceeds GitHub's 100MB file limit and is excluded — it
-regenerates from the raw counts via the notebook.
+`pca_coords.csv`, `X_log2tpm_hvg3000.csv`, and `y_subtypes.csv` are tracked directly in the repo. `X_log2tpm_filtered.csv` (the full filtered log2-TPM matrix, ~129MB) exceeds GitHub's 100MB file limit and is excluded - it regenerates from the raw counts via the notebook.
 
 ## Methods
 
@@ -97,6 +102,7 @@ regenerates from the raw counts via the notebook.
 - Dimensionality reduction: PCA, UMAP
 - Molecular subtype classification: XGBoost
 - Model interpretability: SHAP (per-class top-50 genes, mean |SHAP| scores)
+- Pathway enrichment of SHAP genes: Enrichr (gseapy)
 - Survival analysis: Kaplan-Meier, multivariate Cox proportional hazards
 
 ## Notes

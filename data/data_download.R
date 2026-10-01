@@ -174,7 +174,7 @@ if (!is.null(subtype_df) && nrow(subtype_df) > 0) {
 
 # ============================================================
 #  4. Copy Number Variation (CNV) segments
-#     Useful for validating CNV-High subtype assignment
+#     Useful for validating CN-High subtype assignment
 # ============================================================
 cat("\n[4/5] Downloading CNV segment data...\n")
 
